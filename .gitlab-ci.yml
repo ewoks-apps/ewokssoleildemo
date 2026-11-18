@@ -31,12 +31,6 @@ pages:
 assets:
   extends: .assets
 
-pypi:
-  extends: .pypi
-
-testpypi:
-  extends: .testpypi
-
 .workflow:
   extends: .test-3.12-redis
   script:
