@@ -17,10 +17,6 @@ from ewokssoleildemo.apps.xrfmap import WORKFLOW_SELECT_AREA
 from ewokssoleildemo.apps.xrfmap import XrfmapParameters
 from ewokssoleildemo.apps.xrfmap import xrfmap_arguments
 
-# The workflow gives the area in the units of the positioners: assumed to be um.
-# The easy-config expects [x0_in_mm, y0_in_mm, width_in_um, height_in_um].
-_POSITION_TO_MM = 1e-3
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -60,15 +56,9 @@ def main() -> None:
         result = future.result()
         print("Next area", result)
 
-        x0, z0, width, height = result["sample_area"]
         fss.reload_config(args.flyscan_config, False)
         easy_config = getattr(fss.cfgs, args.flyscan_config).easy_config
-        easy_config.parameters.sample_area = [
-            x0 * _POSITION_TO_MM,
-            z0 * _POSITION_TO_MM,
-            width,
-            height,
-        ]
+        easy_config.parameters.sample_area = result["sample_area"]
         easy_config.parameters.pixel_size_in_um = result["pixel_size"]
         fss.save_config(args.flyscan_config, False)
 

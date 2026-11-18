@@ -14,36 +14,31 @@ Make the example data of :doc:`xrfmap` first.
 Select an area
 --------------
 
+Use the ``inputs`` of :doc:`xrfmap`, and add the element map for the selection.
+``Ta_L`` is a fit result: the L lines of Ta.
+
 .. code-block:: python
 
-    import pathlib
-
-    from ewoks import execute_graph
-    from ewokssoleildemo.apps.xrfmap import WORKFLOW_SELECT_AREA
-    from ewokssoleildemo.apps.xrfmap import XrfmapParameters
-    from ewokssoleildemo.apps.xrfmap import xrfmap_arguments
-
-    parameters = XrfmapParameters.model_validate_json(
-        pathlib.Path("parameters.json").read_text()
+    inputs.append({"id": "select", "name": "signal", "value": "Ta_L"})
+    result = execute_graph(
+        "ewokssoleildemo.workflows.xrfmap_flyscan_select_area",
+        inputs=inputs,
+        load_options={"representation": "json_module"},
     )
-    arguments = xrfmap_arguments(
-        "scan_0001.nxs", "processed", parameters, select_area=True
-    )
-    result = execute_graph(WORKFLOW_SELECT_AREA, **arguments)
 
 The result for the example data:
 
 .. code-block:: python
 
-    {"sample_area": [4.48, 3.03, 0.95, 1.14], "pixel_size": 0.068}
+    {"sample_area": [3.03, 4.48, 1.14, 0.95], "pixel_size": 0.0635}
 
 * ``sample_area``: start of the fast axis, start of the slow axis, width and height of the new area.
 * ``pixel_size``: the new pixel size.
 
 The units are the units of the positioners.
-The parameter ``signal`` in ``parameters.json`` gives the element map.
 
-The same from the command line:
+The same from the command line.
+The parameter ``signal`` in ``parameters.json`` gives the element map.
 
 .. code-block:: bash
 
@@ -59,6 +54,7 @@ How ``SelectArea`` selects the area
 2. It removes the regions that are less than approximately 5 points wide.
 3. It finds the largest region of the remaining points.
 4. The new area is the bounding box of this region.
+   The fast axis is the positioner that moves between consecutive scan points.
 5. The new pixel size is the old pixel size divided by 2.
 
 The divisor of the pixel size is the input ``zoom``.
@@ -66,7 +62,7 @@ To change the percentile or ``zoom``, add inputs for the node ``select``:
 
 .. code-block:: python
 
-    arguments["inputs"] += [
+    inputs += [
         {"id": "select", "name": "percentile", "value": 95},
         {"id": "select", "name": "zoom", "value": 4},
     ]
@@ -92,9 +88,9 @@ This script is not tested. It needs the FlyScan Tango devices and the SOLEIL ``f
 
 .. warning::
 
-    The easy-config gives the start of the area in mm, and the width, the height and the pixel size in µm.
-    The script assumes that the positioners are in µm.
-    It divides the start of the area by 1000, and does not change the other values.
+    The script writes the workflow results to the easy-config without unit conversion.
+    The easy-config description gives the start of the area in mm, but scan 17760 uses it in µm,
+    the unit of the PI positions. SOLEIL must confirm this.
 
 .. literalinclude:: ../../scripts/testbench_a2.py
     :language: python

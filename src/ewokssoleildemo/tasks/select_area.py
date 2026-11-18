@@ -15,6 +15,10 @@ class Inputs(BaseInputModel):
         description="Regridded XRF results.",
         examples=["/processed/scan_0001_xrf.h5::/1.1/regrid/results"],
     )
+    bliss_scan_uri: str = Field(
+        description="Bliss scan with the positions of the map axes.",
+        examples=["/processed/scan_0001_xrf.h5::/1.1"],
+    )
     signal: str = Field(description="Element map to select from.", examples=["Ta_L"])
     percentile: float = Field(
         default=90, description="Select the map points above this percentile."
@@ -33,14 +37,18 @@ class Outputs(BaseOutputModel):
 class SelectArea(Task, input_model=Inputs, output_model=Outputs):
     """Select the largest region with a high signal and scan it with smaller pixels."""
 
-    def run(self):
+    def run(self) -> None:
         filename, h5path = split_h5uri(self.inputs.xrf_results_uri)
         with h5py.File(filename, "r") as h5file:
             parameters = h5file[h5path]["parameters"]
-            slow_axis, fast_axis = parameters.attrs["axes"]
+            axes = list(parameters.attrs["axes"])
             image = parameters[self.inputs.signal][()]
-            fast = parameters[fast_axis][()]
-            slow = parameters[slow_axis][()]
+            grid = [parameters[axis][()] for axis in axes]
+
+        filename, h5path = split_h5uri(self.inputs.bliss_scan_uri)
+        with h5py.File(filename, "r") as h5file:
+            measurement = h5file[h5path]["measurement"]
+            ifast = _fast_axis_index([measurement[axis][()] for axis in axes])
 
         mask = image > numpy.nanpercentile(image, self.inputs.percentile)
         mask = ndimage.binary_opening(mask, iterations=2)
@@ -49,10 +57,11 @@ class SelectArea(Task, input_model=Inputs, output_model=Outputs):
             raise RuntimeError(f"No region found in {self.inputs.signal!r}")
         sizes = ndimage.sum(mask, labels, range(1, nlabels + 1))
         largest = int(numpy.argmax(sizes))
-        slow_slice, fast_slice = ndimage.find_objects(labels)[largest]
+        slices = ndimage.find_objects(labels)[largest]
 
-        fast_range = fast[fast_slice]
-        slow_range = slow[slow_slice]
+        fast = grid[ifast]
+        fast_range = fast[slices[ifast]]
+        slow_range = grid[1 - ifast][slices[1 - ifast]]
         self.outputs.sample_area = [
             float(fast_range[0]),
             float(slow_range[0]),
@@ -60,3 +69,12 @@ class SelectArea(Task, input_model=Inputs, output_model=Outputs):
             float(slow_range[-1] - slow_range[0]),
         ]
         self.outputs.pixel_size = float(abs(fast[1] - fast[0]) / self.inputs.zoom)
+
+
+def _fast_axis_index(positions: list[numpy.ndarray]) -> int:
+    """Index of the axis that moves between consecutive scan points."""
+    steps = [
+        numpy.median(numpy.abs(numpy.diff(values))) / numpy.ptp(values)
+        for values in positions
+    ]
+    return int(numpy.argmax(steps))

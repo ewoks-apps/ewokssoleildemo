@@ -140,6 +140,10 @@
       "target": "select",
       "data_mapping": [
         {
+          "source_output": "bliss_scan_uri",
+          "target_input": "bliss_scan_uri"
+        },
+        {
           "source_output": "xrf_results_uri",
           "target_input": "xrf_results_uri"
         }

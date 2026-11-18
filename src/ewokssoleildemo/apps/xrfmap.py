@@ -38,7 +38,7 @@ class XrfmapParameters(BaseModel):
         examples=[0.1],
     )
     positioners: list[str] = Field(
-        description="Fast axis and slow axis of the map.", examples=[["samx", "samz"]]
+        description="Axes of the map.", examples=[["samx", "samz"]]
     )
     signal: Optional[str] = Field(
         default=None,
