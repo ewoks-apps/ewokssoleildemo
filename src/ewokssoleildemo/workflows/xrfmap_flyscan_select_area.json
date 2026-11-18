@@ -1,0 +1,149 @@
+{
+  "graph": {
+    "id": "xrfmap_flyscan_select_area",
+    "label": "XRF map: FlyScan, select the next scan area",
+    "schema_version": "1.1"
+  },
+  "nodes": [
+    {
+      "id": "convert",
+      "label": "FlyScan to Bliss",
+      "task_type": "class",
+      "task_identifier": "ewokssoleildemo.tasks.flyscan.FlyscanToBliss"
+    },
+    {
+      "id": "sum",
+      "label": "Sum spectra",
+      "task_type": "class",
+      "task_identifier": "ewoksfluo.tasks.sum_detectors.sum_spectra.SumXrfSpectra"
+    },
+    {
+      "id": "fit",
+      "label": "Fit",
+      "task_type": "class",
+      "task_identifier": "ewoksfluo.tasks.fit.tasks.FitSingleScanSingleDetector"
+    },
+    {
+      "id": "norm",
+      "label": "Normalize",
+      "task_type": "class",
+      "task_identifier": "ewoksfluo.tasks.normalization.norm_results.NormalizeXrfResults"
+    },
+    {
+      "id": "counters",
+      "label": "Raw counters",
+      "task_type": "class",
+      "task_identifier": "ewoksfluo.tasks.raw_counters.extract_counters.ExtractRawCounters"
+    },
+    {
+      "id": "regrid",
+      "label": "Regrid",
+      "task_type": "class",
+      "task_identifier": "ewoksfluo.tasks.regrid.regrid.RegridXrfResults"
+    },
+    {
+      "id": "select",
+      "label": "Select area",
+      "task_type": "class",
+      "task_identifier": "ewokssoleildemo.tasks.select_area.SelectArea"
+    }
+  ],
+  "links": [
+    {
+      "source": "convert",
+      "target": "sum",
+      "data_mapping": [
+        {
+          "source_output": "bliss_scan_uri",
+          "target_input": "bliss_scan_uri"
+        }
+      ]
+    },
+    {
+      "source": "sum",
+      "target": "fit",
+      "data_mapping": [
+        {
+          "source_output": "bliss_scan_uri",
+          "target_input": "bliss_scan_uri"
+        },
+        {
+          "source_output": "output_root_uri",
+          "target_input": "output_root_uri"
+        },
+        {
+          "source_output": "detector_name",
+          "target_input": "detector_name"
+        },
+        {
+          "source_output": "xrf_spectra_uri_template",
+          "target_input": "xrf_spectra_uri_template"
+        }
+      ]
+    },
+    {
+      "source": "fit",
+      "target": "norm",
+      "data_mapping": [
+        {
+          "source_output": "bliss_scan_uri",
+          "target_input": "bliss_scan_uri"
+        },
+        {
+          "source_output": "output_root_uri",
+          "target_input": "output_root_uri"
+        },
+        {
+          "source_output": "xrf_results_uri",
+          "target_input": "xrf_results_uri"
+        }
+      ]
+    },
+    {
+      "source": "norm",
+      "target": "counters",
+      "data_mapping": [
+        {
+          "source_output": "bliss_scan_uri",
+          "target_input": "bliss_scan_uri"
+        },
+        {
+          "source_output": "output_root_uri",
+          "target_input": "output_root_uri"
+        },
+        {
+          "source_output": "xrf_results_uri",
+          "target_input": "xrf_results_uri"
+        }
+      ]
+    },
+    {
+      "source": "counters",
+      "target": "regrid",
+      "data_mapping": [
+        {
+          "source_output": "bliss_scan_uri",
+          "target_input": "bliss_scan_uri"
+        },
+        {
+          "source_output": "output_root_uri",
+          "target_input": "output_root_uri"
+        },
+        {
+          "source_output": "xrf_results_uri",
+          "target_input": "xrf_results_uri"
+        }
+      ]
+    },
+    {
+      "source": "regrid",
+      "target": "select",
+      "data_mapping": [
+        {
+          "source_output": "xrf_results_uri",
+          "target_input": "xrf_results_uri"
+        }
+      ]
+    }
+  ]
+}

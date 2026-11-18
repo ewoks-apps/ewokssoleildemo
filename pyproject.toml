@@ -1,0 +1,92 @@
+[build-system]
+requires = [
+    "setuptools>=61",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ewokssoleildemo"
+version = "0.0.1-alpha"
+keywords = [
+    "ewoks"
+]
+
+authors = [{name = "ESRF", email = "dau-pydev@esrf.fr"}]
+description = "Ewoks workflows for the SOLEIL FlyScan test bench"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE.md"}
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "ewokscore",
+    "ewoksutils",
+    "ewoksfluo >=1.3",
+    "h5py",
+    "numpy",
+    "pydantic",
+    "scipy",
+]
+
+[project.urls]
+Homepage = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/"
+Documentation = "https://workflow.gitlab-pages.esrf.fr/ewoksapps/ewokssoleildemo/"
+Repository = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/"
+Issues = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/issues"
+Changelog = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/-/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+job = [
+    "ewoks",
+    "ewoksjob[redis,sql]",
+]
+test = [
+    "pytest >=7",
+]
+dev = [
+    "ewokssoleildemo[test]",
+    "ruff",
+]
+doc = [
+    "ewokssoleildemo[test]",
+    "sphinx >=4.5",
+    "sphinx-autodoc-typehints >=1.16",
+    "pydata-sphinx-theme",
+    "sphinx-copybutton",
+    "ewokssphinx >=2.0"
+]
+
+[tool.setuptools]
+package-dir = {""= "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"ewokssoleildemo.workflows" = ["*.json"]
+
+[project.entry-points."ewoks.tasks.class"]
+"ewokssoleildemo.tasks.*" = "ewokssoleildemo"
+
+[project.entry-points."ewoks.workflows"]
+"ewokssoleildemo.workflows.*" = "ewokssoleildemo"
+
+
+[tool.coverage.run]
+omit = [
+    "*/tests/*"
+]
+[tool.ruff.lint]
+select = ["E", "F", "I", "S"]
+ignore = ["E203", "E501", "E701"]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore `S101` (assert used violations) in all test files
+"*/test_*.py" = ["S101"]
+
+[tool.ruff.lint.isort]
+force-single-line = true
