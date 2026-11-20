@@ -9,11 +9,8 @@ import pathlib
 import time
 
 import tango
-from ewoksjob.client import submit
-
-from ewokssoleildemo.apps.xrfmap import WORKFLOW
-from ewokssoleildemo.apps.xrfmap import XrfmapParameters
-from ewokssoleildemo.apps.xrfmap import xrfmap_arguments
+from xrfmap_job import read_parameters
+from xrfmap_job import submit_xrfmap
 
 
 def main() -> None:
@@ -31,9 +28,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    parameters = XrfmapParameters.model_validate_json(
-        pathlib.Path(args.parameters).read_text()
-    )
+    parameters = read_parameters(args.parameters)
     server = tango.DeviceProxy(args.server)
     server.set_timeout_millis(30000)
     merger = tango.DeviceProxy(args.merger)
@@ -46,8 +41,7 @@ def main() -> None:
     filename = list(merger.outputNexusFiles)[-1]
     print("Scan saved in", filename)
 
-    arguments = xrfmap_arguments(filename, args.processed_dir, parameters)
-    future = submit(args=(WORKFLOW,), kwargs=arguments)
+    future = submit_xrfmap(filename, args.processed_dir, parameters)
     print("Job", future.uuid)
 
 

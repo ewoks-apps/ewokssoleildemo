@@ -7,15 +7,11 @@ Set EWOKS_CONFIG_URI to the configuration of the worker, for example scripts/con
 
 import argparse
 import logging
-import pathlib
 
 import tango
-from ewoksjob.client import submit
 from fs.client import proxy
-
-from ewokssoleildemo.apps.xrfmap import WORKFLOW_SELECT_AREA
-from ewokssoleildemo.apps.xrfmap import XrfmapParameters
-from ewokssoleildemo.apps.xrfmap import xrfmap_arguments
+from xrfmap_job import read_parameters
+from xrfmap_job import submit_xrfmap
 
 
 def main() -> None:
@@ -34,9 +30,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    parameters = XrfmapParameters.model_validate_json(
-        pathlib.Path(args.parameters).read_text()
-    )
+    parameters = read_parameters(args.parameters)
     fss = proxy.FlyScanServerWrapper()
     fss._logger.setLevel(logging.CRITICAL)
     fss.relocate(args.server)
@@ -49,10 +43,9 @@ def main() -> None:
         filename = list(merger.outputNexusFiles)[-1]
         print("Scan saved in", filename)
 
-        arguments = xrfmap_arguments(
+        future = submit_xrfmap(
             filename, args.processed_dir, parameters, select_area=True
         )
-        future = submit(args=(WORKFLOW_SELECT_AREA,), kwargs=arguments)
         result = future.result()
         print("Next area", result)
 

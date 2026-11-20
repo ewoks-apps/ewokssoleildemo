@@ -158,6 +158,13 @@ At the end of the scan, it reads the NeXus file name from the DataMerger and sub
 Use ``--server`` and ``--merger`` to change the Tango device names.
 This script is not tested. It needs the FlyScan Tango devices.
 
+The script needs ``ewoksjob[redis]`` (or ``ewoksjob[sql]``) and PyTango. It does not need *ewokssoleildemo*:
+only the worker needs it. ``scripts/xrfmap_job.py`` submits the workflow.
+
 .. literalinclude:: ../../scripts/testbench_a1.py
     :language: python
     :caption: scripts/testbench_a1.py
+
+.. literalinclude:: ../../scripts/xrfmap_job.py
+    :language: python
+    :caption: scripts/xrfmap_job.py
