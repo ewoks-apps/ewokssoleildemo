@@ -23,15 +23,12 @@ def main() -> None:
     parser.add_argument(
         "--server", default="flyscan/core/server.1", help="FlyScan server device"
     )
-    parser.add_argument(
-        "--merger", default="flyscan/core/data-merger.1", help="DataMerger device"
-    )
     args = parser.parse_args()
 
     parameters = read_parameters(args.parameters)
     server = tango.DeviceProxy(args.server)
     server.set_timeout_millis(30000)
-    merger = tango.DeviceProxy(args.merger)
+    merger = tango.DeviceProxy(server.mergerDevice)
 
     server.configuration = pathlib.Path(args.flyscan_config).read_text().splitlines()
     server.Start()

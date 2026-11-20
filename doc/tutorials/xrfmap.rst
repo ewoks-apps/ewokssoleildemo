@@ -155,7 +155,7 @@ At the end of the scan, it reads the NeXus file name from the DataMerger and sub
     EWOKS_CONFIG_URI=scripts/config_redis.py \
         python scripts/testbench_a1.py scan.cfg parameters.json processed
 
-Use ``--server`` and ``--merger`` to change the Tango device names.
+Use ``--server`` to change the Tango device name of the FlyScan server.
 This script is not tested. It needs the FlyScan Tango devices.
 
 The script needs ``ewoksjob[redis]`` (or ``ewoksjob[sql]``) and PyTango. It does not need *ewokssoleildemo*:

@@ -82,7 +82,7 @@ Repeat on the test bench
         python scripts/testbench_a2.py my_flyscan_config parameters.json processed --nscans 3
 
 The first argument is the name of the FlyScan configuration.
-Use ``--server`` and ``--merger`` to change the Tango device names.
+Use ``--server`` to change the Tango device name of the FlyScan server.
 
 This script is not tested. It needs the FlyScan Tango devices and the SOLEIL ``fs`` library.
 Like ``scripts/testbench_a1.py``, it does not need *ewokssoleildemo*. See :doc:`xrfmap`.

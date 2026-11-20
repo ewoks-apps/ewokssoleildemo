@@ -8,7 +8,6 @@ Set EWOKS_CONFIG_URI to the configuration of the worker, for example scripts/con
 import argparse
 import logging
 
-import tango
 from fs.client import proxy
 from xrfmap_job import read_parameters
 from xrfmap_job import submit_xrfmap
@@ -25,9 +24,6 @@ def main() -> None:
     parser.add_argument(
         "--server", default="flyscan/core/server.1", help="FlyScan server device"
     )
-    parser.add_argument(
-        "--merger", default="flyscan/core/data-merger.1", help="DataMerger device"
-    )
     args = parser.parse_args()
 
     parameters = read_parameters(args.parameters)
@@ -35,12 +31,11 @@ def main() -> None:
     fss._logger.setLevel(logging.CRITICAL)
     fss.relocate(args.server)
     fss._logger.setLevel(logging.INFO)
-    merger = tango.DeviceProxy(args.merger)
 
     for _ in range(args.nscans):
         fss.set_cfg(args.flyscan_config)
         fss.start(True)
-        filename = list(merger.outputNexusFiles)[-1]
+        filename = list(fss.data_files_list())[-1]
         print("Scan saved in", filename)
 
         future = submit_xrfmap(
