@@ -16,4 +16,4 @@ python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed
 
 ## Documentation
 
-https://workflow.gitlab-pages.esrf.fr/ewoksapps/ewokssoleildemo/
+https://ewokssoleildemo.readthedocs.io/
