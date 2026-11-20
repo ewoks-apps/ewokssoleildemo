@@ -44,9 +44,11 @@ def main() -> None:
         result = future.result()
         print("Next area", result)
 
+        # The positions are in µm. The easy-config has x0 and y0 in mm.
+        x0, y0, width, height = result["sample_area"]
         fss.reload_config(args.flyscan_config, False)
         easy_config = getattr(fss.cfgs, args.flyscan_config).easy_config
-        easy_config.parameters.sample_area = result["sample_area"]
+        easy_config.parameters.sample_area = [x0 / 1000, y0 / 1000, width, height]
         easy_config.parameters.pixel_size_in_um = result["pixel_size"]
         fss.save_config(args.flyscan_config, False)
 

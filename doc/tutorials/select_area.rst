@@ -87,11 +87,8 @@ Use ``--server`` to change the Tango device name of the FlyScan server.
 This script is not tested. It needs the FlyScan Tango devices and the SOLEIL ``fs`` library.
 Like ``scripts/testbench_a1.py``, it does not need *ewokssoleildemo*. See :doc:`xrfmap`.
 
-.. warning::
-
-    The script writes the workflow results to the easy-config without unit conversion.
-    The easy-config description gives the start of the area in mm, but scan 17760 uses it in µm,
-    the unit of the PI positions. SOLEIL must confirm this.
+The positions in the NeXus file are in µm. The easy-config has the start of the area in mm.
+The script divides the start of the area by 1000.
 
 .. literalinclude:: ../../scripts/testbench_a2.py
     :language: python
