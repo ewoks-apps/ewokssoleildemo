@@ -33,37 +33,58 @@ test_sdist-3.14:
     - python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_local $WORKFLOW_OPTIONS
     - timeout 300s env EWOKS_CONFIG_URI=scripts/config_redis.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_redis --submit --wait $WORKFLOW_OPTIONS
     - timeout 300s env EWOKS_CONFIG_URI=scripts/config_sqlite.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_sqlite --submit --wait $WORKFLOW_OPTIONS
+
+scenario_a1-3.12:
+  extends: .test-3.12-redis
+  script:
+    - python -m pip install $PIP_INSTALL_OPTIONS .[job]
+    - !reference [.workflow, script]
   artifacts:
     paths:
       - worker_*.log
     when: always
     expire_in: 2h
 
-.workflow_regular-3.12:
+scenario_a2-3.12:
   extends: .test-3.12-redis
   script:
-    - !reference [.test-3.12-redis, script]
+    - python -m pip install $PIP_INSTALL_OPTIONS .[job]
     - !reference [.workflow, script]
-
-.workflow_sdist-3.12:
-  extends: .test_sdist-3.12-redis
-  script:
-    - !reference [.test_sdist-3.12-redis, script]
-    - !reference [.workflow, script]
-
-scenario_a1-3.12:
-  extends: .workflow_regular-3.12
-
-scenario_a2-3.12:
-  extends: .workflow_regular-3.12
+  artifacts:
+    paths:
+      - worker_*.log
+    when: always
+    expire_in: 2h
   variables:
     WORKFLOW_OPTIONS: "--select-area"
 
 scenario_a1_sdist-3.12:
-  extends: .workflow_sdist-3.12
+  extends: .test_sdist-3.12-redis
+  script:
+    - |
+      for filename in sdist/*.tar.gz; do
+        python -m pip install $PIP_INSTALL_OPTIONS $filename[job]
+      done
+    - !reference [.workflow, script]
+  artifacts:
+    paths:
+      - worker_*.log
+    when: always
+    expire_in: 2h
 
 scenario_a2_sdist-3.12:
-  extends: .workflow_sdist-3.12
+  extends: .test_sdist-3.12-redis
+  script:
+    - |
+      for filename in sdist/*.tar.gz; do
+        python -m pip install $PIP_INSTALL_OPTIONS $filename[job]
+      done
+    - !reference [.workflow, script]
+  artifacts:
+    paths:
+      - worker_*.log
+    when: always
+    expire_in: 2h
   variables:
     WORKFLOW_OPTIONS: "--select-area"
 
