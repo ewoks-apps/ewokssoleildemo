@@ -4,6 +4,10 @@ include:
 
 variables:
   DISABLE_BLACK_FLAKE8: "yes"
+
+ruff:
+  extends: .ruff
+
 test-3.10:
   extends: .test-3.10
 
@@ -19,28 +23,14 @@ test_sdist-3.10:
 test_sdist-3.14:
   extends: .test_sdist-3.14
 
-ruff:
-  extends: .ruff
-
-build_doc:
-  extends: .build_doc
-
-pages:
-  extends: .pages
-
-assets:
-  extends: .assets
-
 .workflow:
-  extends: .test-3.12-redis
-  script:
-    - python -m pip install $PIP_INSTALL_OPTIONS .[job]
-    - python -m pip list
+  before_script:
     - redis-server --save "" --appendonly no --daemonize yes
     - ./scripts/start_worker.sh redis --logfile=worker_redis.log &
     - ./scripts/start_worker.sh sqlite --logfile=worker_sqlite.log &
     - python doc/_ext/make_pymca_config.py pymca_example.cfg
     - python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs parameters.json
+  script:
     - python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_local $WORKFLOW_OPTIONS
     - EWOKS_CONFIG_URI=scripts/config_redis.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_redis --submit --wait $WORKFLOW_OPTIONS
     - EWOKS_CONFIG_URI=scripts/config_sqlite.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_sqlite --submit --wait $WORKFLOW_OPTIONS
@@ -50,10 +40,51 @@ assets:
     when: always
     expire_in: 2h
 
-scenario_a1:
-  extends: .workflow
+.workflow_regular-3.12:
+  extends: .test-3.12-redis
+  before_script:
+    - !reference [.test-3.12-redis, before_script]
+    - !reference [.workflow, before_script]
+  script:
+    - !reference [.test-3.12-redis, script]
+    - !reference [.workflow, script]
 
-scenario_a2:
-  extends: .workflow
+.workflow_sdist-3.12:
+  extends: .test_sdist-3.12-redis
+  before_script:
+    - !reference [.test_sdist-3.12-redis, before_script]
+    - !reference [.workflow, before_script]
+  script:
+    - !reference [.test_sdist-3.12-redis, script]
+    - !reference [.workflow, script]
+
+scenario_a1-3.12:
+  extends: .workflow_regular-3.12
+
+scenario_a2-3.12:
+  extends: .workflow_regular-3.12
   variables:
     WORKFLOW_OPTIONS: "--select-area"
+
+scenario_a1_sdist-3.12:
+  extends: .workflow_sdist-3.12
+
+scenario_a2_sdist-3.12:
+  extends: .workflow_sdist-3.12
+  variables:
+    WORKFLOW_OPTIONS: "--select-area"
+
+build_doc:
+  extends: .build_doc
+
+pypi:
+  extends: .pypi
+
+testpypi:
+  extends: .testpypi
+
+pages:
+  extends: .pages
+
+assets:
+  extends: .assets
