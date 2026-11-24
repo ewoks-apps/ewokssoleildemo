@@ -24,13 +24,12 @@ test_sdist-3.14:
   extends: .test_sdist-3.14
 
 .workflow:
-  before_script:
+  script:
     - redis-server --save "" --appendonly no --daemonize yes
     - ./scripts/start_worker.sh redis --logfile=worker_redis.log &
     - ./scripts/start_worker.sh sqlite --logfile=worker_sqlite.log &
     - python doc/_ext/make_pymca_config.py pymca_example.cfg
     - python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs parameters.json
-  script:
     - python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_local $WORKFLOW_OPTIONS
     - timeout 300s env EWOKS_CONFIG_URI=scripts/config_redis.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_redis --submit --wait $WORKFLOW_OPTIONS
     - timeout 300s env EWOKS_CONFIG_URI=scripts/config_sqlite.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_sqlite --submit --wait $WORKFLOW_OPTIONS
@@ -42,18 +41,12 @@ test_sdist-3.14:
 
 .workflow_regular-3.12:
   extends: .test-3.12-redis
-  before_script:
-    - !reference [.test-3.12-redis, before_script]
-    - !reference [.workflow, before_script]
   script:
     - !reference [.test-3.12-redis, script]
     - !reference [.workflow, script]
 
 .workflow_sdist-3.12:
   extends: .test_sdist-3.12-redis
-  before_script:
-    - !reference [.test_sdist-3.12-redis, before_script]
-    - !reference [.workflow, before_script]
   script:
     - !reference [.test_sdist-3.12-redis, script]
     - !reference [.workflow, script]
