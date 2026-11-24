@@ -40,8 +40,7 @@ Changelog = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/-/blob/ma
 
 [project.optional-dependencies]
 job = [
-    "ewoks",
-    "ewoksjob[redis,sql]",
+    "ewoksjob[redis,sql,worker]",
 ]
 test = [
     "pytest >=7",
