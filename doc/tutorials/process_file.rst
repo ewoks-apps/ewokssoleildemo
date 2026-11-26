@@ -49,7 +49,11 @@ The workflow writes these files in ``processed/``:
 * ``scan_0001_bliss.h5``: the NeXus file as a Bliss scan. See :doc:`../explanations/flyscan_data`.
 * ``scan_0001_xrf.h5``: the XRF results.
 
-To also save the workflow with all its inputs, add the execution option ``-o convert_destination=$PWD/processed/scan_0001_workflow.json``.
+To also save the workflow with all its inputs, add this option to the command:
+
+.. code-block:: bash
+
+    -o convert_destination=$PWD/processed/scan_0001_workflow.json
 
 Execute the workflow from Python
 --------------------------------
@@ -83,7 +87,16 @@ Execute the workflow from Python
         load_options={"root_module": "ewokssoleildemo.workflows"},
     )
 
-To also save the workflow with all its inputs, add ``convert_destination=f"{processed}/scan_0001_workflow.json"``.
+To also save the workflow with all its inputs, add the argument ``convert_destination``:
+
+.. code-block:: python
+
+    execute_graph(
+        "xrfmap_flyscan",
+        inputs=inputs,
+        load_options={"root_module": "ewokssoleildemo.workflows"},
+        convert_destination=f"{processed}/scan_0001_workflow.json",
+    )
 
 Show the maps
 -------------
