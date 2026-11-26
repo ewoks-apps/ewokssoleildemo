@@ -49,6 +49,11 @@ jobs:
             workflow-options: "--select-area"
     env:
       WORKFLOW_OPTIONS: ${{ matrix.workflow-options }}
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
 
     steps:
       - uses: ewoks-apps/.github/.github/actions/setup-python-package@main
@@ -57,7 +62,6 @@ jobs:
 
       - name: Run scenario
         run: |
-          redis-server --save "" --appendonly no --daemonize yes
           ./scripts/start_worker.sh redis --logfile=worker_redis.log &
           ./scripts/start_worker.sh sqlite --logfile=worker_sqlite.log &
           python doc/_ext/make_pymca_config.py pymca_example.cfg
