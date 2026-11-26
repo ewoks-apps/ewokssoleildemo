@@ -33,9 +33,9 @@ jobs:
     needs: build
     uses: ewoks-apps/.github/.github/workflows/python-docs.yml@main
 
-  # Run the test bench scenarios locally and on Redis and SQLite workers
-  scenarios:
-    name: scenario ${{ matrix.scenario }}
+  # Execute the workflows with the example data: locally, and on Redis and SQLite workers
+  workflows:
+    name: ${{ matrix.workflow }}
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -43,12 +43,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - scenario: A1
-            workflow-options: ""
-          - scenario: A2
-            workflow-options: "--select-area"
+          - workflow: xrfmap_flyscan
+            parameters: ""
+          - workflow: xrfmap_flyscan_select_area
+            parameters: "-pn select:signal=Ta_L"
     env:
-      WORKFLOW_OPTIONS: ${{ matrix.workflow-options }}
+      WORKFLOW: ${{ matrix.workflow }}
+      PARAMETERS: ${{ matrix.parameters }}
     services:
       redis:
         image: redis
@@ -60,20 +61,37 @@ jobs:
         with:
           install-extras: "job"
 
-      - name: Run scenario
+      - name: Execute the workflow
         run: |
-          ./scripts/start_worker.sh redis --logfile=worker_redis.log &
-          ./scripts/start_worker.sh sqlite --logfile=worker_sqlite.log &
+          ewoksjob --config scripts/config_redis.py worker --pool=process --logfile=worker_redis.log &
+          ewoksjob --config scripts/config_sqlite.py worker --pool=process --logfile=worker_sqlite.log &
           python doc/_ext/make_pymca_config.py pymca_example.cfg
-          python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs parameters.json
-          python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_local $WORKFLOW_OPTIONS
-          timeout 300s env EWOKS_CONFIG_URI=scripts/config_redis.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_redis --submit --wait $WORKFLOW_OPTIONS
-          timeout 300s env EWOKS_CONFIG_URI=scripts/config_sqlite.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_sqlite --submit --wait $WORKFLOW_OPTIONS
+          python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs
+          # Arguments: ewoks command, output directory, other options
+          xrfmap() {
+            command=$1
+            processed=$PWD/$2
+            shift 2
+            $command $WORKFLOW --workflow-module ewokssoleildemo.workflows \
+              -pn convert:filename=$PWD/scan_0001.nxs \
+              -pn convert:output_filename=$processed/scan_0001_bliss.h5 \
+              -pn 'sum:detector_names=["xmap1_det00","xmap1_det01"]' \
+              -pn 'sum:detector_normalization_template=0.1*<instrument/{}/trigger_count_rate>/(<instrument/{}/elapsed_time>*<instrument/{}/event_count_rate>)' \
+              -pn sum:output_root_uri=$processed/scan_0001_xrf.h5::/1.1 \
+              -pn fit:config=$PWD/pymca_example.cfg \
+              -pn fit:energy_name=energy \
+              -pn norm:counter_name=i0 \
+              -pn 'regrid:positioners=["samx","samz"]' \
+              $PARAMETERS --outputs end --merge-outputs "$@"
+          }
+          xrfmap "ewoks execute" processed_local
+          (export EWOKS_CONFIG_URI=scripts/config_redis.py; xrfmap "ewoksjob submit" processed_redis --load-remote --wait 300)
+          (export EWOKS_CONFIG_URI=scripts/config_sqlite.py; xrfmap "ewoksjob submit" processed_sqlite --load-remote --wait 300)
 
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: worker-logs-${{ matrix.scenario }}
+          name: worker-logs-${{ matrix.workflow }}
           path: worker_*.log
           retention-days: 1
 
@@ -81,7 +99,7 @@ jobs:
   # branch protection never needs updating when jobs/matrix entries change.
   ci-gate:
     name: CI gate
-    needs: [build, tests, checks, docs, scenarios]
+    needs: [build, tests, checks, docs, workflows]
     if: always()
     runs-on: ubuntu-latest
     steps:

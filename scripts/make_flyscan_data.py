@@ -1,12 +1,10 @@
 """Create a FlyScan NeXus file with simulated XRF spectra of a Ta Siemens star.
 
-Also create the processing parameters for this file.
 The NeXus file has the layout of the files from the SOLEIL DataMerger.
 The spectra use the lines and the detector calibration of the PyMca configuration.
 """
 
 import argparse
-import json
 
 import h5py
 import numpy
@@ -15,7 +13,7 @@ from PyMca5.PyMcaIO.ConfigDict import ConfigDict
 from PyMca5.PyMcaPhysics.xrf.ClassMcaTheory import McaTheory
 
 
-def main(pymca_config: str, nxs_filename: str, parameters_filename: str) -> None:
+def main(pymca_config: str, nxs_filename: str) -> None:
     fast = numpy.linspace(0, 10, 80)  # samx
     slow = numpy.linspace(0, 8, 60)  # samz
     samx, samz = numpy.meshgrid(fast, slow)
@@ -55,17 +53,6 @@ def main(pymca_config: str, nxs_filename: str, parameters_filename: str) -> None
         scan_data["samz_dataset"] = samz
         scan_data["i0"] = numpy.random.poisson(10000, ta.shape)
 
-    parameters = {
-        "pymca_config": pymca_config,
-        "detector_names": ["xmap1_det00", "xmap1_det01"],
-        "counter_name": "i0",
-        "reference_time": _ELAPSED_TIME,
-        "positioners": ["samx", "samz"],
-        "signal": "Ta_L",
-    }
-    with open(parameters_filename, "w") as f:
-        json.dump(parameters, f, indent=2)
-
 
 _ELAPSED_TIME = 0.1
 
@@ -104,8 +91,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pymca_config", help="PyMca configuration file")
     parser.add_argument("nxs_filename", help="FlyScan NeXus file to write")
-    parser.add_argument(
-        "parameters_filename", help="JSON file with the processing parameters to write"
-    )
     args = parser.parse_args()
-    main(args.pymca_config, args.nxs_filename, args.parameters_filename)
+    main(args.pymca_config, args.nxs_filename)
