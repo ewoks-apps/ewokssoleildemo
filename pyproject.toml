@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ewokssoleildemo"
-version = "0.0.1-alpha"
+version = "1.0.0"
 keywords = [
     "ewoks"
 ]
