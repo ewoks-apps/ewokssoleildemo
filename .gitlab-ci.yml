@@ -26,67 +26,73 @@ test_sdist-3.14:
 .workflow:
   script:
     - redis-server --save "" --appendonly no --daemonize yes
-    - ./scripts/start_worker.sh redis --logfile=worker_redis.log &
-    - ./scripts/start_worker.sh sqlite --logfile=worker_sqlite.log &
+    - ewoksjob --config scripts/config_redis.py worker --pool=process --logfile=worker_redis.log &
+    - ewoksjob --config scripts/config_sqlite.py worker --pool=process --logfile=worker_sqlite.log &
     - python doc/_ext/make_pymca_config.py pymca_example.cfg
-    - python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs parameters.json
-    - python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_local $WORKFLOW_OPTIONS
-    - timeout 300s env EWOKS_CONFIG_URI=scripts/config_redis.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_redis --submit --wait $WORKFLOW_OPTIONS
-    - timeout 300s env EWOKS_CONFIG_URI=scripts/config_sqlite.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_sqlite --submit --wait $WORKFLOW_OPTIONS
-
-scenario_a1-3.12:
-  extends: .test-3.12-redis
-  script:
-    - python -m pip install $PIP_INSTALL_OPTIONS .[job]
-    - !reference [.workflow, script]
+    - python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs
+    - |
+      # Arguments: ewoks command, output directory, other options
+      xrfmap() {
+        command=$1
+        processed=$PWD/$2
+        shift 2
+        $command $WORKFLOW --workflow-module ewokssoleildemo.workflows \
+          -pn convert:filename=$PWD/scan_0001.nxs \
+          -pn convert:output_filename=$processed/scan_0001_bliss.h5 \
+          -pn 'sum:detector_names=["xmap1_det00","xmap1_det01"]' \
+          -pn 'sum:detector_normalization_template=0.1*<instrument/{}/trigger_count_rate>/(<instrument/{}/elapsed_time>*<instrument/{}/event_count_rate>)' \
+          -pn sum:output_root_uri=$processed/scan_0001_xrf.h5::/1.1 \
+          -pn fit:config=$PWD/pymca_example.cfg \
+          -pn fit:energy_name=energy \
+          -pn norm:counter_name=i0 \
+          -pn 'regrid:positioners=["samx","samz"]' \
+          $PARAMETERS --outputs end --merge-outputs "$@"
+      }
+      xrfmap "ewoks execute" processed_local
+      (export EWOKS_CONFIG_URI=scripts/config_redis.py; xrfmap "ewoksjob submit" processed_redis --load-remote --wait 300)
+      (export EWOKS_CONFIG_URI=scripts/config_sqlite.py; xrfmap "ewoksjob submit" processed_sqlite --load-remote --wait 300)
   artifacts:
     paths:
       - worker_*.log
     when: always
     expire_in: 2h
 
-scenario_a2-3.12:
-  extends: .test-3.12-redis
-  script:
-    - python -m pip install $PIP_INSTALL_OPTIONS .[job]
-    - !reference [.workflow, script]
-  artifacts:
-    paths:
-      - worker_*.log
-    when: always
-    expire_in: 2h
+.xrfmap_flyscan:
   variables:
-    WORKFLOW_OPTIONS: "--select-area"
+    WORKFLOW: "xrfmap_flyscan"
+    PARAMETERS: ""
 
-scenario_a1_sdist-3.12:
-  extends: .test_sdist-3.12-redis
+.xrfmap_flyscan_select_area:
+  variables:
+    WORKFLOW: "xrfmap_flyscan_select_area"
+    PARAMETERS: "-pn select:signal=Ta_L"
+
+.workflow-3.12:
+  extends: [.test-3.12-redis, .workflow]
+  script:
+    - python -m pip install $PIP_INSTALL_OPTIONS .[job]
+    - !reference [.workflow, script]
+
+.workflow_sdist-3.12:
+  extends: [.test_sdist-3.12-redis, .workflow]
   script:
     - |
       for filename in sdist/*.tar.gz; do
         python -m pip install $PIP_INSTALL_OPTIONS $filename[job]
       done
     - !reference [.workflow, script]
-  artifacts:
-    paths:
-      - worker_*.log
-    when: always
-    expire_in: 2h
 
-scenario_a2_sdist-3.12:
-  extends: .test_sdist-3.12-redis
-  script:
-    - |
-      for filename in sdist/*.tar.gz; do
-        python -m pip install $PIP_INSTALL_OPTIONS $filename[job]
-      done
-    - !reference [.workflow, script]
-  artifacts:
-    paths:
-      - worker_*.log
-    when: always
-    expire_in: 2h
-  variables:
-    WORKFLOW_OPTIONS: "--select-area"
+xrfmap_flyscan-3.12:
+  extends: [.workflow-3.12, .xrfmap_flyscan]
+
+xrfmap_flyscan_select_area-3.12:
+  extends: [.workflow-3.12, .xrfmap_flyscan_select_area]
+
+xrfmap_flyscan_sdist-3.12:
+  extends: [.workflow_sdist-3.12, .xrfmap_flyscan]
+
+xrfmap_flyscan_select_area_sdist-3.12:
+  extends: [.workflow_sdist-3.12, .xrfmap_flyscan_select_area]
 
 build_doc:
   extends: .build_doc

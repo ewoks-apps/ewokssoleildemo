@@ -21,22 +21,24 @@ if TYPE_CHECKING:
 
 
 def main(cfg_filename: str, nxs_filename: Optional[str] = None) -> None:
+    energy = _beam_energy(nxs_filename) if nxs_filename else 12.0
     model = _get_configuration(
         peaks={"Ta": "L", "Si": "K", "Ar": "K"},
         xmin=100,
-        xmax=1350,
-        energy=12,
+        # Channel of the beam energy plus 10 %: includes the scatter peaks
+        xmax=int(1.1 * energy / _CALIBRATION["gain"]),
+        energy=energy,
         elements=["Ta", "Si"],
     )
     cfg = pymca_configdict_from_model(model)
+    for key, value in _CALIBRATION.items():
+        cfg["detector"][key] = value
 
     if nxs_filename:
         calibration = _fit_calibration(cfg, _sum_spectrum(nxs_filename))
         print(calibration)
-    else:
-        calibration = _CALIBRATION
-    for key, value in calibration.items():
-        cfg["detector"][key] = value
+        cfg["detector"].update(calibration)
+    for key in _CALIBRATION:
         cfg["detector"][f"fixed{key}"] = 1
 
     pymca_configdict_to_file(cfg, cfg_filename)
@@ -73,6 +75,22 @@ def _fit_calibration(cfg: dict, spectrum: numpy.ndarray) -> dict:
         key: float(result["fittedpar"][result["parameters"].index(key.capitalize())])
         for key in _CALIBRATION
     }
+
+
+def _beam_energy(nxs_filename: str) -> float:
+    """Monochromator energy in keV."""
+    with h5py.File(nxs_filename, "r") as nxroot:
+        entry = next(iter(nxroot.values()))
+        for instrument in entry.values():
+            if not isinstance(instrument, h5py.Group):
+                continue
+            for group in instrument.values():
+                if isinstance(group, h5py.Group) and group.attrs.get("NX_class") in (
+                    "NXmonochromator",
+                    b"NXmonochromator",
+                ):
+                    return float(numpy.ravel(group["energy"][()])[0])
+    raise ValueError(f"No monochromator energy in {nxs_filename}")
 
 
 _SPECTRA = re.compile(r"^xmap\d+channel\d+$")

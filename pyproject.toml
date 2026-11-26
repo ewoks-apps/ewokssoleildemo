@@ -25,6 +25,7 @@ dependencies = [
     "ewokscore",
     "ewoksutils",
     "ewoksfluo >=1.3",
+    "ewoksorange <6",
     "h5py",
     "numpy",
     "pydantic",

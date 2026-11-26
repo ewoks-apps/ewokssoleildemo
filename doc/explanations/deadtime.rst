@@ -23,5 +23,6 @@ Before the sum of the detectors, the workflows multiply each spectrum by the fac
     f = \frac{t_{\mathrm{ref}}}{t_{\mathrm{live}}}
       = \frac{t_{\mathrm{ref}} \, \mathrm{ICR}}{t_{\mathrm{real}} \, \mathrm{OCR}}
 
-With :math:`t_{\mathrm{ref}} = 0.1` s, all spectra have the counts for 100 ms of live time.
-:math:`t_{\mathrm{ref}}` is the processing parameter ``reference_time``.
+The workflow input ``sum:detector_normalization_template`` gives :math:`f`.
+:math:`t_{\mathrm{ref}}` is the number at the start of this input.
+For the example data of :doc:`../tutorials/process_file`, :math:`t_{\mathrm{ref}} = 0.1` s: all spectra have the counts for 100 ms of live time.

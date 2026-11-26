@@ -14,12 +14,9 @@ of the `European Synchrotron <https://www.esrf.eu/>`_.
 
    .. code-block:: bash
 
-      git clone https://github.com/ewoks-apps/ewokssoleildemo.git
-      cd ewokssoleildemo
-      pip install -e ".[job]"
-      python doc/_ext/make_pymca_config.py pymca_example.cfg
-      python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs parameters.json
-      python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed
+      pip install "ewokssoleildemo[job]"
+
+   Then process a FlyScan file: see :doc:`tutorials/process_file`.
 
 .. toctree::
    :hidden:

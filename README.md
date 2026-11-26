@@ -6,13 +6,12 @@ They make X-ray fluorescence maps from FlyScan NeXus files.
 ## Getting started
 
 ```bash
-pip install -e ".[job]"
-python doc/_ext/make_pymca_config.py pymca_example.cfg
-python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs parameters.json
-python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed
+pip install "ewokssoleildemo[job]"
 ```
 
-`python -m ewokssoleildemo.apps.xrfmap` and all scripts in `scripts/` have a `--help` option.
+Then process a FlyScan file with `ewoks execute xrfmap_flyscan --workflow-module ewokssoleildemo.workflows`.
+To check the inputs first, use `ewoks show` with the same options.
+See the tutorial "Scenario 1: process a FlyScan file" in the documentation.
 
 ## Documentation
 
