@@ -48,7 +48,7 @@ class SelectArea(Task, input_model=Inputs, output_model=Outputs):
         filename, h5path = split_h5uri(self.inputs.bliss_scan_uri)
         with h5py.File(filename, "r") as h5file:
             measurement = h5file[h5path]["measurement"]
-            ifast = _fast_axis_index([measurement[axis][()] for axis in axes])
+            ifast, step = _fast_axis([measurement[axis][()] for axis in axes])
 
         mask = image > numpy.nanpercentile(image, self.inputs.percentile)
         mask = ndimage.binary_opening(mask, iterations=2)
@@ -59,8 +59,7 @@ class SelectArea(Task, input_model=Inputs, output_model=Outputs):
         largest = int(numpy.argmax(sizes))
         slices = ndimage.find_objects(labels)[largest]
 
-        fast = grid[ifast]
-        fast_range = fast[slices[ifast]]
+        fast_range = grid[ifast][slices[ifast]]
         slow_range = grid[1 - ifast][slices[1 - ifast]]
         self.outputs.sample_area = [
             float(fast_range[0]),
@@ -68,13 +67,13 @@ class SelectArea(Task, input_model=Inputs, output_model=Outputs):
             float(fast_range[-1] - fast_range[0]),
             float(slow_range[-1] - slow_range[0]),
         ]
-        self.outputs.pixel_size = float(abs(fast[1] - fast[0]) / self.inputs.zoom)
+        self.outputs.pixel_size = float(step / self.inputs.zoom)
 
 
-def _fast_axis_index(positions: list[numpy.ndarray]) -> int:
-    """Index of the axis that moves between consecutive scan points."""
-    steps = [
-        numpy.median(numpy.abs(numpy.diff(values))) / numpy.ptp(values)
-        for values in positions
-    ]
-    return int(numpy.argmax(steps))
+def _fast_axis(positions: list[numpy.ndarray]) -> tuple[int, float]:
+    """Index and scan step of the axis that moves between consecutive scan points."""
+    steps = [numpy.median(numpy.abs(numpy.diff(values))) for values in positions]
+    ifast = int(
+        numpy.argmax([step / numpy.ptp(v) for step, v in zip(steps, positions)])
+    )
+    return ifast, float(steps[ifast])

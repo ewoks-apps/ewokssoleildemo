@@ -30,7 +30,7 @@ The result for the example data:
 
 .. code-block:: python
 
-    {"sample_area": [3.03, 4.48, 1.14, 0.95], "pixel_size": 0.0635}
+    {"sample_area": [3.03, 4.48, 1.14, 0.95], "pixel_size": 0.0633}
 
 * ``sample_area``: start of the fast axis, start of the slow axis, width and height of the new area.
 * ``pixel_size``: the new pixel size.
@@ -55,7 +55,7 @@ How ``SelectArea`` selects the area
 3. It finds the largest region of the remaining points.
 4. The new area is the bounding box of this region.
    The fast axis is the positioner that moves between consecutive scan points.
-5. The new pixel size is the old pixel size divided by 2.
+5. The new pixel size is the scan step of the fast axis divided by 2.
 
 The divisor of the pixel size is the input ``zoom``.
 To change the percentile or ``zoom``, add inputs for the node ``select``:
