@@ -9,8 +9,18 @@ They make X-ray fluorescence maps from FlyScan NeXus files.
 pip install "ewokssoleildemo[job]"
 ```
 
-Then process a FlyScan file with `ewoks execute xrfmap_flyscan --workflow-module ewokssoleildemo.workflows`.
-To check the inputs first, use `ewoks show` with the same options.
+Show the inputs of the workflow:
+
+```bash
+ewoks show xrfmap_flyscan --workflow-module ewokssoleildemo.workflows
+```
+
+Process a FlyScan file. Give the inputs with `-pn NODE:NAME=VALUE`:
+
+```bash
+ewoks execute xrfmap_flyscan --workflow-module ewokssoleildemo.workflows -pn ...
+```
+
 See the tutorial "Scenario 1: process a FlyScan file" in the documentation.
 
 ## Documentation
