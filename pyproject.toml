@@ -32,11 +32,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/"
+Homepage = "https://github.com/ewoks-apps/ewokssoleildemo/"
 Documentation = "https://ewokssoleildemo.readthedocs.io/"
-Repository = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/"
-Issues = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/issues"
-Changelog = "https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/-/blob/main/CHANGELOG.md"
+Repository = "https://github.com/ewoks-apps/ewokssoleildemo/"
+Issues = "https://github.com/ewoks-apps/ewokssoleildemo/issues"
+Changelog = "https://github.com/ewoks-apps/ewokssoleildemo/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 job = [
