@@ -13,7 +13,8 @@ def test_select_area(tmp_path, axes):
     image[30:60, 20:40] = 100
     if axes[0] == "samz":
         image = image.T
-    samz, samx = numpy.meshgrid(slow, fast, indexing="ij")
+    # The scan step (0.2) differs from the step of the regrid grid (0.1).
+    samz, samx = numpy.meshgrid(slow, fast[::2], indexing="ij")
     filename = str(tmp_path / "xrf.h5")
     with h5py.File(filename, "w") as root:
         root["1.1/measurement/samx"] = samx.flatten()
@@ -34,4 +35,4 @@ def test_select_area(tmp_path, axes):
     task.execute()
 
     numpy.testing.assert_allclose(task.outputs.sample_area, [3, 2, 2.9, 1.9])
-    numpy.testing.assert_allclose(task.outputs.pixel_size, 0.05)
+    numpy.testing.assert_allclose(task.outputs.pixel_size, 0.1)
