@@ -14,7 +14,7 @@ of the `European Synchrotron <https://www.esrf.eu/>`_.
 
    .. code-block:: bash
 
-      git clone https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo.git
+      git clone https://github.com/ewoks-apps/ewokssoleildemo.git
       cd ewokssoleildemo
       pip install -e ".[job]"
       python doc/_ext/make_pymca_config.py pymca_example.cfg

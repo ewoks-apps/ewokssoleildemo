@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Project created
 
-[Unreleased]: https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/-/commits/HEAD
+[Unreleased]: https://github.com/ewoks-apps/ewokssoleildemo/commits/HEAD
 
 <!--
-[Unreleased]: https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/compare/v0.1.0...HEAD
-[0.1.0]: https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo/-/tags/v0.1.0
+[Unreleased]: https://github.com/ewoks-apps/ewokssoleildemo/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/ewoks-apps/ewokssoleildemo/releases/tag/v0.1.0
 -->

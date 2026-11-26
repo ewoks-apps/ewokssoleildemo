@@ -5,7 +5,7 @@ Install *ewokssoleildemo* from the repository:
 
 .. code-block:: bash
 
-    git clone https://gitlab.esrf.fr/workflow/ewoksapps/ewokssoleildemo.git
+    git clone https://github.com/ewoks-apps/ewokssoleildemo.git
     cd ewokssoleildemo
     pip install -e ".[job]"
 

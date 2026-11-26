@@ -1,0 +1,93 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  # Build Python package
+  build:
+    uses: ewoks-apps/.github/.github/workflows/python-build.yml@main
+
+  # Run tests
+  tests:
+    needs: build
+    uses: ewoks-apps/.github/.github/workflows/python-tests.yml@main
+    with:
+      python-version: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.14"]
+
+  # Run linter / checks
+  checks:
+    uses: ewoks-apps/.github/.github/workflows/python-check.yml@main
+
+  # Build documentation
+  docs:
+    needs: build
+    uses: ewoks-apps/.github/.github/workflows/python-docs.yml@main
+
+  # Run the test bench scenarios locally and on Redis and SQLite workers
+  scenarios:
+    name: scenario ${{ matrix.scenario }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: A1
+            workflow-options: ""
+          - scenario: A2
+            workflow-options: "--select-area"
+    env:
+      WORKFLOW_OPTIONS: ${{ matrix.workflow-options }}
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: ewoks-apps/.github/.github/actions/setup-python-package@main
+        with:
+          install-extras: "job"
+
+      - name: Run scenario
+        run: |
+          ./scripts/start_worker.sh redis --logfile=worker_redis.log &
+          ./scripts/start_worker.sh sqlite --logfile=worker_sqlite.log &
+          python doc/_ext/make_pymca_config.py pymca_example.cfg
+          python scripts/make_flyscan_data.py pymca_example.cfg scan_0001.nxs parameters.json
+          python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_local $WORKFLOW_OPTIONS
+          timeout 300s env EWOKS_CONFIG_URI=scripts/config_redis.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_redis --submit --wait $WORKFLOW_OPTIONS
+          timeout 300s env EWOKS_CONFIG_URI=scripts/config_sqlite.py python -m ewokssoleildemo.apps.xrfmap scan_0001.nxs parameters.json processed_sqlite --submit --wait $WORKFLOW_OPTIONS
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: worker-logs-${{ matrix.scenario }}
+          path: worker_*.log
+          retention-days: 1
+
+  # Single stable check for branch protection: aggregates all other jobs so
+  # branch protection never needs updating when jobs/matrix entries change.
+  ci-gate:
+    name: CI gate
+    needs: [build, tests, checks, docs, scenarios]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs succeeded
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" || "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "A required job failed or was cancelled"
+            exit 1
+          fi
